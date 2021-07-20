@@ -258,14 +258,9 @@ class UNet(nn.Module):
             ]))
         
         mid_channels = channels[-1]
-        self.mid = nn.Sequential(
-            ResidualBlock(
-                mid_channels, mid_channels,
-                time_emb_dim=time_emb_dim, num_classes=num_classes, activation=activation, norm=norm, num_groups=num_groups),
-            ResidualBlock(
-                mid_channels, mid_channels,
-                time_emb_dim=time_emb_dim, num_classes=num_classes, activation=activation, norm=norm, num_groups=num_groups),
-        )
+        self.mid = ResidualBlock(
+            mid_channels, mid_channels,
+            time_emb_dim=time_emb_dim, num_classes=num_classes, activation=activation, norm=norm, num_groups=num_groups)
 
         for ind, (in_channels, out_channels) in enumerate(reversed(channel_pairs[1:])):
             self.ups.append(nn.ModuleList([
