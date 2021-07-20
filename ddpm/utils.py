@@ -21,7 +21,7 @@ def preprocess_image(img):
         raise ValueError("incorrect number of channels in an image")
 
 
-def generate_video(samples_list, delay=100, id=0):
+def show_video(samples_list, delay=100, id=0):
     fig = plt.figure(figsize=(8, 8))
     images = []
     for sample in samples_list:
@@ -29,6 +29,7 @@ def generate_video(samples_list, delay=100, id=0):
     
     ani = animation.ArtistAnimation(fig, images, interval=delay)
     display(HTML(ani.to_html5_video()))
+
 
 def show_images(image_tensor, rows, cols=None, colorbar=False):
     if cols is None:
@@ -60,6 +61,7 @@ def show_images(image_tensor, rows, cols=None, colorbar=False):
                 plt.colorbar()
     
     plt.show()
+
 
 def show_image(img, colorbar=False):
     if img.shape[0] == 3:
