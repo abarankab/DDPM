@@ -190,7 +190,7 @@ class ResidualBlock(nn.Module):
 
 
 class UNet(nn.Module):
-    __doc__ = """UNet model used to estimate noise. No attention is used. No residual block in the middle is used.
+    __doc__ = """UNet model used to estimate noise. No attention is used.
 
     Input:
         x: tensor of shape (N, in_channels, H, W)
@@ -235,9 +235,9 @@ class UNet(nn.Module):
         self.num_classes = num_classes
         self.time_mlp = nn.Sequential(
             PositionalEmbedding(time_emb_dim, time_emb_scale),
-            nn.Linear(time_emb_dim, time_emb_dim * 2),
+            nn.Linear(time_emb_dim, time_emb_dim * 4),
             nn.ReLU(),
-            nn.Linear(time_emb_dim * 2, time_emb_dim),
+            nn.Linear(time_emb_dim * 4, time_emb_dim),
         ) if time_emb_dim is not None else None
     
         channels = (img_channels, *[base_channels * mult for mult in channel_mults])
@@ -256,6 +256,16 @@ class UNet(nn.Module):
                               time_emb_dim=time_emb_dim, num_classes=num_classes, activation=activation, norm=norm, num_groups=num_groups),
                 Downsample(out_channels, use_reflection_pad=use_reflection_pad) if not is_last else nn.Identity(),
             ]))
+        
+        mid_channels = channels[-1]
+        self.mid = nn.Sequential(
+            ResidualBlock(
+                mid_channels, mid_channels,
+                time_emb_dim=time_emb_dim, num_classes=num_classes, activation=activation, norm=norm, num_groups=num_groups),
+            ResidualBlock(
+                mid_channels, mid_channels,
+                time_emb_dim=time_emb_dim, num_classes=num_classes, activation=activation, norm=norm, num_groups=num_groups),
+        )
 
         for ind, (in_channels, out_channels) in enumerate(reversed(channel_pairs[1:])):
             self.ups.append(nn.ModuleList([
@@ -294,6 +304,8 @@ class UNet(nn.Module):
             x = r2(x, time_emb, y)
             skips.append(x)
             x = downsample(x)
+        
+        x = self.mid(x, time_emb, y)
         
         for r1, r2, upsample in self.ups:
             x = r1(torch.cat([x, skips.pop()], dim=1), time_emb, y)

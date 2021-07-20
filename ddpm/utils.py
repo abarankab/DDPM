@@ -25,7 +25,7 @@ def show_video(samples_list, delay=100, id=0):
     fig = plt.figure(figsize=(8, 8))
     images = []
     for sample in samples_list:
-        images.append([preprocess_image(sample[id].squeeze())])
+        images.append([preprocess_image(sample[id])])
     
     ani = animation.ArtistAnimation(fig, images, interval=delay)
     display(HTML(ani.to_html5_video()))
