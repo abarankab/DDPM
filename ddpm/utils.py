@@ -53,9 +53,9 @@ def show_images(image_tensor, rows, cols=None, colorbar=False):
 
             plt.subplot(rows, cols, i * cols + j + 1)
             if is_rgb:
-                plt.imshow(image_tensor[i * cols + j].permute(1, 2, 0))
+                plt.imshow(((image_tensor[i * cols + j] + 1) / 2).permute(1, 2, 0))
             else:
-                plt.imshow(image_tensor[i * cols + j].squeeze(), cmap="gray")
+                plt.imshow(((image_tensor[i * cols + j] + 1) / 2).squeeze(), cmap="gray")
             
             if colorbar:
                 plt.colorbar()

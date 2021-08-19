@@ -111,7 +111,7 @@ class GaussianDiffusion(nn.Module):
             t_batch = torch.tensor([t], device=device).repeat(batch_size)
             x = self.remove_noise(x, t_batch, y, use_ema)
 
-            if t > 1:
+            if t > 0:
                 x += extract(self.sigma, t_batch, x.shape) * torch.randn_like(x)
         
         return x.cpu().detach()
