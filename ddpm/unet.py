@@ -12,7 +12,7 @@ def get_norm(norm, num_features, num_groups):
     elif norm == "bn":
         return nn.BatchNorm2d(num_features)
     elif norm == "gn":
-        return nn.GroupNorm2d(num_groups, num_features)
+        return nn.GroupNorm(num_groups, num_features)
     else:
         raise ValueError("unknown normalization type")
 
@@ -90,7 +90,7 @@ class Upsample(nn.Module):
         super().__init__()
 
         self.upsample = nn.Sequential(
-            nn.Upsample(scale_factor=2, align_corners=align_corners),
+            nn.Upsample(scale_factor=2, mode="bilinear", align_corners=align_corners),
             nn.Conv2d(in_channels, in_channels, 3, padding=1, padding_mode="zeros" if not use_reflection_pad else "reflect"),
         )
     
@@ -139,7 +139,7 @@ class ResidualBlock(nn.Module):
             nn.Dropout(p=dropout),
             nn.Conv2d(out_channels, out_channels, 3, padding=1),
         )
-        self.norm_2 = get_norm(norm, out_channels)
+        self.norm_2 = get_norm(norm, out_channels, num_groups)
 
         self.time_bias = nn.Linear(time_emb_dim, out_channels) if time_emb_dim is not None else None
         self.class_bias = nn.Embedding(num_classes, out_channels) if num_classes is not None else None
@@ -161,7 +161,7 @@ class ResidualBlock(nn.Module):
 
             out += self.class_bias(y)[:, :, None, None]
 
-        out = self.activation(self.norm_2(x))
+        out = self.activation(self.norm_2(out))
         out = self.conv_2(out)
 
         return out + self.residual_connection(x)
@@ -256,9 +256,9 @@ class UNet(nn.Module):
             nn.Linear(time_emb_dim * 4, time_emb_dim),
         ) if time_emb_dim is not None else None
     
-        self.init_conv = nn.Conv2d(img_channels, in_channels, 3, padding=1)
+        self.init_conv = nn.Conv2d(img_channels, base_channels, 3, padding=1)
 
-        channels = (img_channels, *[base_channels * mult for mult in channel_mults])
+        channels = (base_channels, *[base_channels * mult for mult in channel_mults])
         channel_pairs = tuple(zip(channels[:-1], channels[1:]))
 
         self.downs = nn.ModuleList([])
@@ -299,7 +299,7 @@ class UNet(nn.Module):
             ]))
         
         self.out_norm = get_norm(norm, base_channels, num_groups)
-        self.out_conv = nn.Conv2d(base_channels, img_channels, 3)
+        self.out_conv = nn.Conv2d(base_channels, img_channels, 3, padding=1)
     
     def forward(self, x, time=None, y=None):
         ip = self.initial_pad
