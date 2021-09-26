@@ -1,6 +1,6 @@
 ## Denoising Diffusion Probabilistic Models
 
-An implementation of Denoising Diffusion Probabilistic Models for class-conditional image generation written in PyTorch. This roughly follows the original code by Ho et al. Unlike their implementation, however, my model allows for class conditioning through bias in residual blocks. 
+An implementation of Denoising Diffusion Probabilistic Models for image generation written in PyTorch. This roughly follows the original code by Ho et al. Unlike their implementation, however, my model allows for class conditioning through bias in residual blocks. 
 
 ## Experiments
 
