@@ -8,6 +8,13 @@ I have trained the model on MNIST and CIFAR-10 datasets. The model seemed to con
 
 ![Samples after 2000 epochs](resources/samples_linear_200.png)
 
+Here is a sample of a diffusion sequence on MNIST:
+
+<p align="center">
+  <img src="resources/diffusion_sequence_mnist.gif" />
+</p>
+
+
 ## Resources
 
 I gave a talk about diffusion models, NCSNs, and their applications in audio generation. The [slides are available here](resources/diffusion_models_talk_slides.pdf).
