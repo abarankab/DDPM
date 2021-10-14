@@ -140,7 +140,7 @@ def train():
 
             diffusion.update_ema()
             
-            if iteration % args.eval_rate == 0:
+            if iteration % args.log_rate == 0:
                 test_loss = 0
                 with torch.no_grad():
                     diffusion.eval()
