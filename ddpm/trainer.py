@@ -2,12 +2,12 @@ import argparse
 import torch
 import torch.nn.functional as F
 import wandb
-import utils
 
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from unet import UNet
-from diffusion import GaussianDiffusion, generate_linear_schedule, generate_cosine_schedule
+from . import utils
+from .unet import UNet
+from .diffusion import GaussianDiffusion, generate_linear_schedule, generate_cosine_schedule
 
 
 def create_argparser():
@@ -93,7 +93,7 @@ def train():
             run = wandb.init(
                 project=args.project_name,
                 entity='treaptofun',
-                cnonfig=vars(args),
+                config=vars(args),
             )
 
             run.name = run.id
