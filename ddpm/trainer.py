@@ -44,7 +44,7 @@ def create_argparser():
 
 
 def train():
-    args = create_argparser()
+    args = create_argparser().parse_args()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
     try:
