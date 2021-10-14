@@ -34,6 +34,7 @@ def create_argparser():
 
         log_to_wandb=True,
         log_rate=1000,
+        log_dir="~/ddpm_logs"
     )
 
     parser = argparse.ArgumentParser()
@@ -154,8 +155,8 @@ def main():
 
                         test_loss += loss.item()
 
-                model_filename = f"{args.project_name}-{run.name}-{iteration}-model.pth"
-                optim_filename = f"{args.project_name}-{run.name}-{iteration}-optim.pth"
+                model_filename = f"{args.log_dir}/{args.project_name}-{run.name}-{iteration}-model.pth"
+                optim_filename = f"{args.log_dir}/{args.project_name}-{run.name}-{iteration}-optim.pth"
 
                 torch.save(diffusion.state_dict(), model_filename)
                 torch.save(optimizer.state_dict(), optim_filename)
