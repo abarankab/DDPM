@@ -168,8 +168,8 @@ def train():
                 
                 samples = ((samples + 1) / 2).clip(0, 1).permute(0, 2, 3, 1).numpy()
 
-                test_loss /= args.eval_rate
-                acc_train_loss /= args.eval_rate
+                test_loss /= args.log_rate
+                acc_train_loss /= args.log_rate
 
                 wandb.log({
                     "test_loss": test_loss,
