@@ -1,5 +1,6 @@
 import argparse
 import matplotlib.pyplot as plt
+import torchvision
 
 from matplotlib import animation
 from IPython.display import HTML, display
@@ -9,6 +10,26 @@ def extract(a, t, x_shape):
     b, *_ = t.shape
     out = a.gather(-1, t)
     return out.reshape(b, *((1,) * (len(x_shape) - 1)))
+
+
+def get_transform():
+    class RescaleChannels(object):
+        def __call__(self, sample):
+            return 2 * sample - 1
+
+    return torchvision.transforms.Compose([
+        torchvision.transforms.ToTensor(),
+        RescaleChannels(),
+    ])
+
+
+def cycle(dl):
+    """
+    https://github.com/lucidrains/denoising-diffusion-pytorch/
+    """
+    while True:
+        for data in dl:
+            yield data
 
 
 def preprocess_image(img):
@@ -77,8 +98,6 @@ def show_image(img, colorbar=False):
         raise ValueError("incorrect number of channels in an image")
     
     plt.show()
-
-import argparse
 
 
 def str2bool(v):
