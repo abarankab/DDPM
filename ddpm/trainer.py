@@ -43,7 +43,7 @@ def create_argparser():
     return parser
 
 
-def main():
+def train():
     args = create_argparser()
     device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
