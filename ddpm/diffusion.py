@@ -102,9 +102,6 @@ class GaussianDiffusion(nn.Module):
         if y is not None and batch_size != len(y):
             raise ValueError("sample batch size different from length of given y")
 
-        if y is None:
-            y = torch.randint(self.num_classes, batch_size, device=device)
-
         x = torch.randn(batch_size, self.img_channels, *self.img_size, device=device)
         
         for t in range(self.num_timesteps - 1, -1, -1):
@@ -120,9 +117,6 @@ class GaussianDiffusion(nn.Module):
     def sample_diffusion_sequence(self, batch_size, device, y=None, use_ema=True):
         if y is not None and batch_size != len(y):
             raise ValueError("sample batch size different from length of given y")
-
-        if y is None:
-            y = torch.randint(self.num_classes, batch_size, device=device)
 
         x = torch.randn(batch_size, self.img_channels, *self.img_size, device=device)
         diffusion_sequence = [x.cpu().detach()]
