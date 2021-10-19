@@ -114,14 +114,14 @@ class AttentionBlock(nn.Module):
     def __init__(self, in_channels, norm="gn", num_groups=32):
         super().__init__()
         
+        self.in_channels = in_channels
         self.norm = get_norm(norm, in_channels, num_groups)
-
         self.to_qkv = nn.Conv2d(in_channels, in_channels * 3, 1)
         self.to_out = nn.Conv2d(in_channels, in_channels, 1)
 
     def forward(self, x):
         b, c, h, w = x.shape
-        q, k, v = torch.split(self.to_qkv(self.norm(x)), dim=1)
+        q, k, v = torch.split(self.to_qkv(self.norm(x)), self.in_channels, dim=1)
 
         q = q.permute(0, 2, 3, 1).view(b, h * w, c)
         k = k.view(b, c, h * w)
