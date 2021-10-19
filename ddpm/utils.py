@@ -5,9 +5,12 @@ import torch.nn.functional as F
 
 from matplotlib import animation
 from IPython.display import HTML, display
-from ddpm.diffusion import GaussianDiffusion
-from ddpm.unet import UNet
-from ddpm.diffusion import GaussianDiffusion, generate_linear_schedule, generate_cosine_schedule
+from .unet import UNet
+from .diffusion import (
+    GaussianDiffusion,
+    generate_linear_schedule,
+    generate_cosine_schedule,
+)
 
 
 def extract(a, t, x_shape):

@@ -5,8 +5,8 @@ import torch.nn as nn
 from functools import partial
 from copy import deepcopy
 
-from ddpm.ema import EMA
-from ddpm.utils import extract
+from .ema import EMA
+from .utils import extract
 
 class GaussianDiffusion(nn.Module):
     __doc__ = r"""Gaussian Diffusion model. Forwarding through the module returns diffusion reversal scalar loss tensor.
