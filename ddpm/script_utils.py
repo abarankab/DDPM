@@ -60,6 +60,7 @@ def diffusion_defaults():
     defaults = dict(
         num_timesteps=1000,
         schedule="linear",
+        loss_type="l2",
         use_labels=False,
 
         base_channels=128,
@@ -75,43 +76,43 @@ def diffusion_defaults():
 
 
 def get_diffusion_from_args(args):
-        activations = {
-            "relu": F.relu,
-            "mish": F.mish,
-            "silu": F.silu,
-        }
+    activations = {
+        "relu": F.relu,
+        "mish": F.mish,
+        "silu": F.silu,
+    }
 
-        model = UNet(
-            img_channels=3,
+    model = UNet(
+        img_channels=3,
 
-            base_channels=args.base_channels,
-            channel_mults=args.channel_mults,
-            time_emb_dim=args.time_emb_dim,
-            norm=args.norm,
-            dropout=args.dropout,
-            activation=activations[args.activation],
-            attention_resolutions=args.attention_resolutions,
+        base_channels=args.base_channels,
+        channel_mults=args.channel_mults,
+        time_emb_dim=args.time_emb_dim,
+        norm=args.norm,
+        dropout=args.dropout,
+        activation=activations[args.activation],
+        attention_resolutions=args.attention_resolutions,
 
-            num_classes=None if not args.use_labels else 10,
-            initial_pad=0,
+        num_classes=None if not args.use_labels else 10,
+        initial_pad=0,
+    )
+
+    if args.schedule == "cosine":
+        betas = generate_cosine_schedule(args.num_timesteps)
+    else:
+        betas = generate_linear_schedule(
+            args.num_timesteps,
+            1e-4 * 1000 / args.num_timesteps,
+            0.02 * 1000 / args.num_timesteps,
         )
 
-        if args.schedule == "cosine":
-            betas = generate_cosine_schedule(args.num_timesteps)
-        else:
-            betas = generate_linear_schedule(
-                args.num_timesteps,
-                1e-4 * 1000 / args.num_timesteps,
-                0.02 * 1000 / args.num_timesteps,
-            )
+    diffusion = GaussianDiffusion(
+        model, (32, 32), 3, 10,
+        betas,
+        ema_decay=args.ema_decay,
+        ema_update_rate=args.ema_update_rate,
+        ema_start=2000,
+        loss_type=args.loss_type,
+    )
 
-        diffusion = GaussianDiffusion(
-            model, (32, 32), 3, 10,
-            betas,
-            ema_decay=args.ema_decay,
-            ema_update_rate=args.ema_update_rate,
-            ema_start=2000,
-            loss_type=args.loss_type,
-        )
-
-        return diffusion
+    return diffusion
