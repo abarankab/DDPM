@@ -190,7 +190,7 @@ class ResidualBlock(nn.Module):
         self.attention = nn.Identity() if not use_attention else AttentionBlock(out_channels, norm, num_groups)
     
     def forward(self, x, time_emb=None, y=None):
-        out = self.activation(self.norm_1(x)) 
+        out = self.activation(self.norm_1(x))
         out = self.conv_1(out)
 
         if self.time_bias is not None:
@@ -374,7 +374,7 @@ class UNet(nn.Module):
         
         for layer in self.ups:
             if isinstance(layer, ResidualBlock):
-                x = torch.cat([x, skips.pop()])
+                x = torch.cat([x, skips.pop()], dim=1)
             x = layer(x, time_emb, y)
 
         x = self.activation(self.out_norm(x))
