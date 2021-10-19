@@ -20,13 +20,13 @@ def main():
 
                 for image_id in range(len(samples)):
                     image = ((samples[image_id] + 1) / 2).clip(0, 1)
-                    torchvision.script_utils.save_image(image, f"{args.save_dir}/{label}-{image_id}.png")
+                    torchvision.utils.save_image(image, f"{args.save_dir}/{label}-{image_id}.png")
         else:
             samples = diffusion.sample(args.num_images, device)
 
             for image_id in range(len(samples)):
                 image = ((samples[image_id] + 1) / 2).clip(0, 1)
-                torchvision.script_utils.save_image(image, f"{args.save_dir}/{image_id}.png")
+                torchvision.utils.save_image(image, f"{args.save_dir}/{image_id}.png")
     except KeyboardInterrupt:
         print("Keyboard interrupt, generation finished early")
 
