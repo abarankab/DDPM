@@ -269,7 +269,7 @@ class UNet(nn.Module):
         self.downs = nn.ModuleList()
         self.ups = nn.ModuleList()
 
-        channels = []
+        channels = [base_channels]
         now_channels = base_channels
 
         for i, mult in enumerate(channel_mults):
