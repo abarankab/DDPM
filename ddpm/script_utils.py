@@ -70,6 +70,9 @@ def diffusion_defaults():
         dropout=0.1,
         activation="silu",
         attention_resolutions=(1,),
+
+        ema_decay=0.9999,
+        ema_update_rate=1,
     )
 
     return defaults

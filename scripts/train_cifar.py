@@ -129,9 +129,6 @@ def create_argparser():
         learning_rate=2e-4,
         batch_size=128,
         iterations=800000,
-        
-        ema_decay=0.9999,
-        ema_update_rate=1,
 
         log_to_wandb=True,
         log_rate=1000,
