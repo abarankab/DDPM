@@ -295,7 +295,7 @@ class UNet(nn.Module):
                 channels.append(now_channels)
         
 
-        self.mid = nn.MooduleList([
+        self.mid = nn.ModuleList([
             ResidualBlock(
                 now_channels,
                 now_channels,
