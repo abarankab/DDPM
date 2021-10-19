@@ -370,7 +370,7 @@ class UNet(nn.Module):
             skips.append(x)
         
         for layer in self.mid:
-            x = self.mid(x, time_emb, y)
+            x = layer(x, time_emb, y)
         
         for layer in self.ups:
             if isinstance(layer, ResidualBlock):
