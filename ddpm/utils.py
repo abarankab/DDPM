@@ -1,9 +1,13 @@
 import argparse
 import matplotlib.pyplot as plt
 import torchvision
+import torch.nn.functional as F
 
 from matplotlib import animation
 from IPython.display import HTML, display
+from ddpm.diffusion import GaussianDiffusion
+from ddpm.unet import UNet
+from ddpm.diffusion import GaussianDiffusion, generate_linear_schedule, generate_cosine_schedule
 
 
 def extract(a, t, x_shape):
@@ -125,3 +129,62 @@ def add_dict_to_argparser(parser, default_dict):
         elif isinstance(v, bool):
             v_type = str2bool
         parser.add_argument(f"--{k}", default=v, type=v_type)
+
+
+def diffusion_defaults():
+    defaults = dict(
+        num_timesteps=1000,
+        schedule="linear",
+        use_labels=False,
+
+        base_channels=128,
+        channel_mults=(1, 2, 2, 2),
+        time_emb_dim=10,
+        norm="gn",
+        dropout=0.1,
+        activation="silu",
+        attention_resolutions=(1,),
+    )
+
+    return defaults
+
+
+def get_diffusion_from_args(args):
+        activations = {
+            "relu": F.relu,
+            "mish": F.mish,
+            "silu": F.silu,
+        }
+
+        model = UNet(
+            img_channels=3,
+
+            base_channels=args.base_channels,
+            channel_mults=args.channel_mults,
+            time_emb_dim=args.time_emb_dim,
+            norm=args.norm,
+            dropout=args.dropout,
+            activation=activations[args.activation],
+            attention_resolutions=args.attention_resolutions,
+
+            num_classes=None if not args.use_labels else 10,
+            initial_pad=0,
+        )
+
+        if args.schedule == "cosine":
+            betas = generate_cosine_schedule(args.num_timesteps)
+        else:
+            betas = generate_linear_schedule(
+                args.num_timesteps,
+                1e-4 * 1000 / args.num_timesteps,
+                0.02 * 1000 / args.num_timesteps,
+            )
+
+        diffusion = GaussianDiffusion(
+            model, (32, 32), 3, 10,
+            betas,
+            ema_decay=args.ema_decay,
+            ema_update_rate=args.ema_update_rate,
+            ema_start=2000,
+            loss_type=args.loss_type,
+        ).to(device)

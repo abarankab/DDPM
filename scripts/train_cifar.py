@@ -1,102 +1,31 @@
 import argparse
+import datetime
 import torch
-import torch.nn.functional as F
 import wandb
 
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from . import utils
-from .unet import UNet
-from .diffusion import GaussianDiffusion, generate_linear_schedule, generate_cosine_schedule
+from ddpm import utils
 
 
-def create_argparser():
-    defaults = dict(
-        num_timesteps=1000,
-        schedule="linear",
-        loss_type="l2",
-        use_labels=False,
-
-        base_channels=128,
-        channel_mults=(1, 2, 2, 2),
-        time_emb_dim=10,
-        norm="gn",
-        dropout=0.1,
-        activation="silu",
-        attention_resolutions=(1,),
-
-        learning_rate=2e-4,
-        batch_size=128,
-        iterations=800000,
-        
-        ema_decay=0.9999,
-        ema_update_rate=1,
-
-        log_to_wandb=True,
-        log_rate=1000,
-        log_dir="~/ddpm_logs"
-    )
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--project_name", type=str)
-    utils.add_dict_to_argparser(parser, defaults)
-    return parser
-
-
-def train():
+def main():
     args = create_argparser().parse_args()
-    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    device = args.device
 
     try:
-        activations = {
-            "relu": F.relu,
-            "mish": F.mish,
-            "silu": F.silu,
-        }
-
-        model = UNet(
-            img_channels=3,
-
-            base_channels=args.base_channels,
-            channel_mults=args.channel_mults,
-            time_emb_dim=args.time_emb_dim,
-            norm=args.norm,
-            dropout=args.dropout,
-            activation=activations[args.activation],
-            attention_resolutions=args.attention_resolutions,
-
-            num_classes=None if not args.use_labels else 10,
-            initial_pad=0,
-        )
-
-        if args.schedule == "cosine":
-            betas = generate_cosine_schedule(args.num_timesteps)
-        else:
-            betas = generate_linear_schedule(
-                args.num_timesteps,
-                1e-4 * 1000 / args.num_timesteps,
-                0.02 * 1000 / args.num_timesteps,
-            )
-
-        diffusion = GaussianDiffusion(
-            model, (32, 32), 3, 10,
-            betas,
-            ema_decay=args.ema_decay,
-            ema_update_rate=args.ema_update_rate,
-            ema_start=2000,
-            loss_type=args.loss_type,
-        ).to(device)
-        
+        diffusion = utils.get_diffusion_from_args(args).to(device)
         optimizer = torch.optim.Adam(diffusion.parameters(), lr=args.learning_rate)
 
         if args.log_to_wandb:
+            if args.project_name is None:
+                raise ValueError("args.log_to_wandb set to True but args.project_name is None")
             run = wandb.init(
                 project=args.project_name,
                 entity='treaptofun',
                 config=vars(args),
             )
 
-            run.name = run.id
+            run.name = args.run_name
             wandb.watch(diffusion)
 
         batch_size = args.batch_size
@@ -155,8 +84,8 @@ def train():
 
                         test_loss += loss.item()
 
-                model_filename = f"{args.log_dir}/{args.project_name}-{run.name}-{iteration}-model.pth"
-                optim_filename = f"{args.log_dir}/{args.project_name}-{run.name}-{iteration}-optim.pth"
+                model_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-{iteration}-model.pth"
+                optim_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-{iteration}-optim.pth"
 
                 torch.save(diffusion.state_dict(), model_filename)
                 torch.save(optimizer.state_dict(), optim_filename)
@@ -178,8 +107,40 @@ def train():
                 })
 
                 acc_train_loss = 0
-                
-        run.finish()
+        
+        if args.log_to_wandb:
+            run.finish()
     except KeyboardInterrupt:
-        run.finish()
+        if args.log_to_wandb:
+            run.finish()
         print("Keyboard interrupt, run finished early")
+
+
+def create_argparser():
+    device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+    run_name = datetime.datetime.now().strftime("ddpm-%Y-%m-%d-%H-%M")
+    defaults = dict(
+        learning_rate=2e-4,
+        batch_size=128,
+        iterations=800000,
+        
+        ema_decay=0.9999,
+        ema_update_rate=1,
+
+        log_to_wandb=True,
+        log_rate=1000,
+        log_dir="~/ddpm_logs",
+        project_name=None,
+        run_name=run_name,
+
+        device=device,
+    )
+    defaults.update(utils.diffusion_defaults())
+
+    parser = argparse.ArgumentParser()
+    utils.add_dict_to_argparser(parser, defaults)
+    return parser
+
+
+if __name__ == "__main__":
+    main()
