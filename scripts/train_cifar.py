@@ -19,13 +19,13 @@ def main():
         if args.log_to_wandb:
             if args.project_name is None:
                 raise ValueError("args.log_to_wandb set to True but args.project_name is None")
+
             run = wandb.init(
                 project=args.project_name,
                 entity='treaptofun',
                 config=vars(args),
+                name=args.run_name,
             )
-
-            run.name = args.run_name
             wandb.watch(diffusion)
 
         batch_size = args.batch_size
@@ -90,8 +90,8 @@ def main():
 
                         test_loss += loss.item()
 
-                model_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-{iteration}-model.pth"
-                optim_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-{iteration}-optim.pth"
+                model_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-model.pth"
+                optim_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-optim.pth"
 
                 torch.save(diffusion.state_dict(), model_filename)
                 torch.save(optimizer.state_dict(), optim_filename)
