@@ -33,10 +33,10 @@ class GaussianDiffusion(nn.Module):
         img_channels,
         num_classes,
         betas,
-        loss_type="l1",
-        ema_decay=0.995,
-        ema_start=2000,
-        ema_update_rate=10,
+        loss_type="l2",
+        ema_decay=0.9999,
+        ema_start=5000,
+        ema_update_rate=1,
     ):
         super().__init__()
 
@@ -76,13 +76,12 @@ class GaussianDiffusion(nn.Module):
         self.register_buffer("sigma", to_torch(np.sqrt(betas)))
 
     def update_ema(self):
-        if (self.step + 1) % self.ema_update_rate == 0:
+        self.step += 1
+        if self.step % self.ema_update_rate == 0:
             if self.step < self.ema_start:
                 self.ema_model.load_state_dict(self.model.state_dict())
             else:
                 self.ema.update_model_average(self.ema_model, self.model)
-
-        self.step += 1
 
     @torch.no_grad()
     def remove_noise(self, x, t, y, use_ema=True):
@@ -112,7 +111,7 @@ class GaussianDiffusion(nn.Module):
                 x += extract(self.sigma, t_batch, x.shape) * torch.randn_like(x)
         
         return x.cpu().detach()
-    
+
     @torch.no_grad()
     def sample_diffusion_sequence(self, batch_size, device, y=None, use_ema=True):
         if y is not None and batch_size != len(y):
@@ -137,7 +136,7 @@ class GaussianDiffusion(nn.Module):
             extract(self.sqrt_alphas_cumprod, t, x.shape) * x +
             extract(self.sqrt_one_minus_alphas_cumprod, t, x.shape) * noise
         )   
-    
+
     def get_losses(self, x, t, y):
         noise = torch.randn_like(x)
 
@@ -148,9 +147,9 @@ class GaussianDiffusion(nn.Module):
             loss = (estimated_noise - noise).abs().mean()
         elif self.loss_type == "l2":
             loss = (estimated_noise - noise).square().mean()
-        
+
         return loss
-    
+
     def forward(self, x, y=None):
         b, c, h, w = x.shape
         device = x.device

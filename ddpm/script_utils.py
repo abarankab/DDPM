@@ -65,7 +65,8 @@ def diffusion_defaults():
 
         base_channels=128,
         channel_mults=(1, 2, 2, 2),
-        time_emb_dim=10,
+        num_res_blocks=2,
+        time_emb_dim=128 * 4,
         norm="gn",
         dropout=0.1,
         activation="silu",
