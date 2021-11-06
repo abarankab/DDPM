@@ -16,6 +16,11 @@ def main():
         diffusion = script_utils.get_diffusion_from_args(args).to(device)
         optimizer = torch.optim.Adam(diffusion.parameters(), lr=args.learning_rate)
 
+        if args.model_checkpoint is not None:
+            diffusion.load_state_dict(torch.load(args.model_checkpoint))
+        if args.optim_checkpoint is not None:
+            optimizer.load_state_dict(torch.load(args.optim_checkpoint))
+
         if args.log_to_wandb:
             if args.project_name is None:
                 raise ValueError("args.log_to_wandb set to True but args.project_name is None")
@@ -49,7 +54,7 @@ def main():
             batch_size=batch_size,
             shuffle=True,
             drop_last=True,
-            num_workers=4,
+            num_workers=-1,
         ))
         test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True, num_workers=4)
         
@@ -135,6 +140,9 @@ def create_argparser():
         log_dir="~/ddpm_logs",
         project_name=None,
         run_name=run_name,
+
+        model_checkpoint=None,
+        optim_checkpoint=None,
 
         device=device,
     )
