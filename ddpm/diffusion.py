@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 from functools import partial
 from copy import deepcopy
@@ -104,7 +105,7 @@ class GaussianDiffusion(nn.Module):
         x = torch.randn(batch_size, self.img_channels, *self.img_size, device=device)
         
         for t in range(self.num_timesteps - 1, -1, -1):
-            t_batch = torch.tensor([t], device=device).repeat(batch_size)
+            t_batch = torch.ones(batch_size, device=device) * t
             x = self.remove_noise(x, t_batch, y, use_ema)
 
             if t > 0:
@@ -144,9 +145,9 @@ class GaussianDiffusion(nn.Module):
         estimated_noise = self.model(perturbed_x, t, y)
 
         if self.loss_type == "l1":
-            loss = (estimated_noise - noise).abs().mean()
+            loss = F.l1_loss(estimated_noise, noise)
         elif self.loss_type == "l2":
-            loss = (estimated_noise - noise).square().mean()
+            loss = F.mse_loss(estimated_noise, noise)
 
         return loss
 
