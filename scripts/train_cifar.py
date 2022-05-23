@@ -113,7 +113,7 @@ def main():
 
                 acc_train_loss = 0
             
-            if iteration % args.checkpoint_rate:
+            if iteration % args.checkpoint_rate == 0:
                 model_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-model.pth"
                 optim_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-optim.pth"
 
