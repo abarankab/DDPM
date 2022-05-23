@@ -105,7 +105,7 @@ class GaussianDiffusion(nn.Module):
         x = torch.randn(batch_size, self.img_channels, *self.img_size, device=device)
         
         for t in range(self.num_timesteps - 1, -1, -1):
-            t_batch = torch.ones(batch_size, device=device) * t
+            t_batch = torch.tensor([t], device=device).repeat(batch_size)
             x = self.remove_noise(x, t_batch, y, use_ema)
 
             if t > 0:

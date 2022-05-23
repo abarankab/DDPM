@@ -54,9 +54,9 @@ def main():
             batch_size=batch_size,
             shuffle=True,
             drop_last=True,
-            num_workers=-1,
+            num_workers=2,
         ))
-        test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True, num_workers=4)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size, drop_last=True, num_workers=2)
         
         acc_train_loss = 0
 
@@ -94,12 +94,6 @@ def main():
                             loss = diffusion(x)
 
                         test_loss += loss.item()
-
-                model_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-model.pth"
-                optim_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-optim.pth"
-
-                torch.save(diffusion.state_dict(), model_filename)
-                torch.save(optimizer.state_dict(), optim_filename)
                 
                 if args.use_labels:
                     samples = diffusion.sample(10, device, y=torch.arange(10, device=device))
@@ -118,6 +112,13 @@ def main():
                 })
 
                 acc_train_loss = 0
+            
+            if iteration % args.checkpoint_rate:
+                model_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-model.pth"
+                optim_filename = f"{args.log_dir}/{args.project_name}-{args.run_name}-iteration-{iteration}-optim.pth"
+
+                torch.save(diffusion.state_dict(), model_filename)
+                torch.save(optimizer.state_dict(), optim_filename)
         
         if args.log_to_wandb:
             run.finish()
@@ -137,12 +138,16 @@ def create_argparser():
 
         log_to_wandb=True,
         log_rate=1000,
+        checkpoint_rate=1000,
         log_dir="~/ddpm_logs",
         project_name=None,
         run_name=run_name,
 
         model_checkpoint=None,
         optim_checkpoint=None,
+
+        schedule_low=1e-4,
+        schedule_high=0.02,
 
         device=device,
     )

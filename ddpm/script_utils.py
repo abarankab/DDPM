@@ -106,8 +106,8 @@ def get_diffusion_from_args(args):
     else:
         betas = generate_linear_schedule(
             args.num_timesteps,
-            1e-4 * 1000 / args.num_timesteps,
-            0.02 * 1000 / args.num_timesteps,
+            args.schedule_low * 1000 / args.num_timesteps,
+            args.schedule_high * 1000 / args.num_timesteps,
         )
 
     diffusion = GaussianDiffusion(
